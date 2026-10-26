@@ -694,10 +694,11 @@ pub(crate) fn section(app: &mut FigApp, ui: &mut Ui, t: &Tokens) {
         };
         action = action.or(chosen);
     }
-    if folders.is_empty() && files.is_empty() {
-        if let Some(a) = empty(app, ui, t, &page) {
-            folder_act = Some(a);
-        }
+    if folders.is_empty()
+        && files.is_empty()
+        && let Some(a) = empty(app, ui, t, &page)
+    {
+        folder_act = Some(a);
     }
     for (path, kind) in learned {
         app.session.projects.touch(&path, Some(kind), now);

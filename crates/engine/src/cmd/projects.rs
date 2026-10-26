@@ -204,7 +204,7 @@ fn scan(dir: &Path, depth: usize, budget: &mut Budget) -> Option<Scanned> {
             continue;
         }
         // Links aren't followed into folders: a link to a folder above would loop.
-        let Ok(meta) = std::fs::symlink_metadata(&entry) else { continue };
+        let Ok(meta) = crate::file_access::link_metadata(&entry) else { continue };
         if meta.is_dir() {
             if depth > 0
                 && let Some(sub) = scan(&entry, depth - 1, budget)

@@ -151,7 +151,7 @@ fn the_sidebar_has_the_library_and_its_favourites_open_a_folder() {
     assert_eq!(projects(&l.u)["files"], serde_json::json!(["brand", "missing"]));
     // Folding Favorites away (its heading: the last "Favorites" in the sidebar) hides its rows.
     let s = shapes(&mut l.u);
-    let (_, p, size) = texts(&s).into_iter().filter(|(t, p, _)| t == "Favorites" && p.x < 240.0).last().unwrap();
+    let (_, p, size) = texts(&s).into_iter().rfind(|(t, p, _)| t == "Favorites" && p.x < 240.0).unwrap();
     click(&mut l.u, p + size / 2.0);
     assert_eq!(projects(&l.u)["favoritesOpen"], false);
     let s = shapes(&mut l.u);

@@ -1135,7 +1135,7 @@ pub fn handle(app: &mut FigApp, ctx: &Context, method: &str, p: &Value) -> Resul
             }
             // A folder of the project library: its page shows.
             if let Some(id) = p.get("homeFolder").and_then(Value::as_str).filter(|id| app.session.projects.folder(id).is_some()) {
-                crate::home_projects::open_folder(app, &id.to_string());
+                crate::home_projects::open_folder(app, id);
             }
             if let Some(kind) = p.get("homeProjectsKind").and_then(Value::as_str).and_then(crate::home_projects::KindFilter::parse) {
                 app.ui.home_view.projects.kind = kind;
