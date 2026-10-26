@@ -768,7 +768,8 @@ fn header(app: &mut FigApp, ui: &mut Ui, t: &Tokens, page: &Page) -> Option<Fold
         if !matches!(page, Page::Favorites) {
             new = widgets::button(ui, tr("New folder"), true, true).clicked();
         }
-        let resp = widgets::dropdown(ui, tr("Add"), 72.0, None);
+        let add_w = ui.painter().layout_no_wrap(tr("Add").to_string(), regular(11.0), t.text).size().x + 40.0;
+        let resp = widgets::dropdown(ui, tr("Add"), add_w.max(72.0), None);
         crate::right::menu_popup(&resp).show(|ui| {
             if crate::right::menu_item(ui, tr("Add folder from disk…"), "") {
                 add_dir = true;
