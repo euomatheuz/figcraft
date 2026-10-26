@@ -18,10 +18,10 @@ fn dir(tag: &str) -> PathBuf {
 
 fn library() -> Projects {
     let mut p = Projects::default();
-    let mgo = p.create_folder("MGO CONSTRUTORA", None, 1).unwrap();
-    let social = p.create_folder("Social Media", Some(&mgo), 2).unwrap();
+    let northwind = p.create_folder("NORTHWIND BUILDERS", None, 1).unwrap();
+    let social = p.create_folder("Social Media", Some(&northwind), 2).unwrap();
     p.move_files(&["/w/post.figcraft".to_string()], Some(&social), 3).unwrap();
-    p.set_favorite(&Favorite::Folder(mgo), true, 4).unwrap();
+    p.set_favorite(&Favorite::Folder(northwind), true, 4).unwrap();
     p.unsaved = false;
     p
 }
@@ -43,7 +43,7 @@ fn kept_and_read_back_whole() {
     assert!(back.notice.is_none() && back.blocked.is_none());
     // The second save keeps the first as the backup; no staging file is left behind.
     let mut q = p.clone();
-    q.create_folder("MALIE", None, 5).unwrap();
+    q.create_folder("LUMEN", None, 5).unwrap();
     write(&d, &q).unwrap();
     assert_eq!(names(&d), [FILE, BACKUP]);
     let (bak, _) = Projects::from_json(&std::fs::read_to_string(d.join(BACKUP)).unwrap()).unwrap();

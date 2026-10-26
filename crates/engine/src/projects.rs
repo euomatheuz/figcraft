@@ -183,7 +183,7 @@ impl Projects {
         }
     }
 
-    /// "MGO / Social media": where `id` is, for a file's detail line and search.
+    /// "Northwind / Social media": where `id` is, for a file's detail line and search.
     pub fn folder_path(&self, id: &str) -> String {
         self.ancestors(id).iter().map(|f| f.name.as_str()).collect::<Vec<_>>().join(" / ")
     }

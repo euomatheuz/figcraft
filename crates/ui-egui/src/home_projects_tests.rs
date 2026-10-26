@@ -40,14 +40,14 @@ impl Services for Watch {
     }
 }
 
-/// A library on disk: `marca.figcraft` in MGO CONSTRUTORA (a favourite), `post.figcraft` in no
-/// folder, an empty Social Media folder in MGO, and `sumiu.figcraft`, which isn't there.
+/// A library on disk: `brand.figcraft` in NORTHWIND BUILDERS (a favourite), `post.figcraft` in no
+/// folder, an empty Social Media folder in Northwind, and `missing.figcraft`, which isn't there.
 struct Lib {
     u: Ui,
     log: Arc<Mutex<Log>>,
-    mgo: String,
+    northwind: String,
     social: String,
-    marca: String,
+    brand: String,
     post: String,
     gone: String,
     dir: PathBuf,
@@ -62,22 +62,22 @@ fn lib(tag: &str) -> Lib {
         std::fs::write(&path, figcraft_format::save_bytes(&figcraft_doc::Document::new("File"), None).unwrap()).unwrap();
         path.to_string_lossy().into_owned()
     };
-    let (marca, post) = (write("marca.figcraft"), write("post.figcraft"));
-    let gone = dir.join("sumiu.figcraft").to_string_lossy().into_owned();
+    let (brand, post) = (write("brand.figcraft"), write("post.figcraft"));
+    let gone = dir.join("missing.figcraft").to_string_lossy().into_owned();
     let mut s = Session::empty();
     s.prefs.getting_started_dismissed = true;
-    let mgo = s.projects.create_folder("MGO CONSTRUTORA", None, 1).unwrap();
-    let social = s.projects.create_folder("Social Media", Some(&mgo), 2).unwrap();
-    s.projects.move_files(&[marca.clone(), gone.clone()], Some(&mgo), 3).unwrap();
+    let northwind = s.projects.create_folder("NORTHWIND BUILDERS", None, 1).unwrap();
+    let social = s.projects.create_folder("Social Media", Some(&northwind), 2).unwrap();
+    s.projects.move_files(&[brand.clone(), gone.clone()], Some(&northwind), 3).unwrap();
     s.projects.touch(&post, None, 4);
-    s.projects.set_favorite(&Favorite::Folder(mgo.clone()), true, 5).unwrap();
+    s.projects.set_favorite(&Favorite::Folder(northwind.clone()), true, 5).unwrap();
     s.projects.unsaved = false;
     let mut u = Ui::new(s);
     u.app.ui.home = true;
     let log = Arc::new(Mutex::new(Log::default()));
     u.app.services = Box::new(Watch(log.clone()));
     settle(&mut u);
-    Lib { u, log, mgo, social, marca, post, gone, dir }
+    Lib { u, log, northwind, social, brand, post, gone, dir }
 }
 
 impl Drop for Lib {
@@ -137,42 +137,42 @@ fn type_text(u: &mut Ui, text: &str) {
 fn the_sidebar_has_the_library_and_its_favourites_open_a_folder() {
     let mut l = lib("sidebar");
     let s = shapes(&mut l.u);
-    for item in ["Recents", "All projects", "All folders", "Favorites", "MGO CONSTRUTORA"] {
+    for item in ["Recents", "All projects", "All folders", "Favorites", "NORTHWIND BUILDERS"] {
         assert!(has_text(&s, item), "{item}");
     }
-    assert_eq!(projects(&l.u)["favorites"], serde_json::json!(["MGO CONSTRUTORA"]));
-    let s = sidebar(&mut l.u, "MGO CONSTRUTORA");
+    assert_eq!(projects(&l.u)["favorites"], serde_json::json!(["NORTHWIND BUILDERS"]));
+    let s = sidebar(&mut l.u, "NORTHWIND BUILDERS");
     assert_eq!(l.u.app.inspect()["homeSection"], "folder");
-    assert_eq!(projects(&l.u)["folder"], l.mgo.as_str());
+    assert_eq!(projects(&l.u)["folder"], l.northwind.as_str());
     // Its folder, its files (one of them missing) and the breadcrumb back to every folder.
-    for item in ["All folders", "Social Media", "marca", "sumiu", "File not found"] {
+    for item in ["All folders", "Social Media", "brand", "missing", "File not found"] {
         assert!(has_text(&s, item), "{item}: {:?}", texts(&s).iter().map(|t| &t.0).collect::<Vec<_>>());
     }
-    assert_eq!(projects(&l.u)["files"], serde_json::json!(["marca", "sumiu"]));
+    assert_eq!(projects(&l.u)["files"], serde_json::json!(["brand", "missing"]));
     // Folding Favorites away (its heading: the last "Favorites" in the sidebar) hides its rows.
     let s = shapes(&mut l.u);
     let (_, p, size) = texts(&s).into_iter().filter(|(t, p, _)| t == "Favorites" && p.x < 240.0).last().unwrap();
     click(&mut l.u, p + size / 2.0);
     assert_eq!(projects(&l.u)["favoritesOpen"], false);
     let s = shapes(&mut l.u);
-    assert!(!texts(&s).iter().any(|(t, p, _)| t == "MGO CONSTRUTORA" && p.x < 240.0));
+    assert!(!texts(&s).iter().any(|(t, p, _)| t == "NORTHWIND BUILDERS" && p.x < 240.0));
 }
 
 #[test]
 fn a_new_folder_is_named_in_its_dialog_and_kept() {
     let mut l = lib("new");
     let s = sidebar(&mut l.u, "All folders");
-    assert!(has_text(&s, "MGO CONSTRUTORA"));
+    assert!(has_text(&s, "NORTHWIND BUILDERS"));
     click(&mut l.u, text_center(&s, "New folder"));
     assert_eq!(projects(&l.u)["dialog"]["kind"], "newFolder");
-    type_text(&mut l.u, "MALIE");
+    type_text(&mut l.u, "LUMEN");
     let s = shapes(&mut l.u);
     click(&mut l.u, last_center(&s, "Create"));
     let lib = &l.u.app.session.projects;
-    let malie = lib.children(None).into_iter().find(|f| f.name == "MALIE").expect("made").id.clone();
-    assert_eq!(projects(&l.u)["folder"], malie.as_str(), "its page shows");
+    let lumen = lib.children(None).into_iter().find(|f| f.name == "LUMEN").expect("made").id.clone();
+    assert_eq!(projects(&l.u)["folder"], lumen.as_str(), "its page shows");
     settle(&mut l.u);
-    assert!(l.log.lock().unwrap().saved.last().is_some_and(|p| p.folder(&malie).is_some()), "kept at once");
+    assert!(l.log.lock().unwrap().saved.last().is_some_and(|p| p.folder(&lumen).is_some()), "kept at once");
     // Empty, it says so.
     let s = shapes(&mut l.u);
     assert!(has_text(&s, "This folder is empty"));
@@ -183,7 +183,7 @@ fn renaming_a_folder_refuses_a_name_beside_it() {
     let mut l = lib("rename");
     crate::home_projects::open_folder(&mut l.u.app, &l.social.clone());
     l.u.app.ui.home_view.projects.dialog = Some(crate::home_projects::Dialog::Rename { id: l.social.clone(), name: "Social Media".into() });
-    let _ = l.u.app.session.projects.create_folder("Apresentações", Some(&l.mgo), 9);
+    let _ = l.u.app.session.projects.create_folder("Apresentações", Some(&l.northwind), 9);
     l.u.app.ui.home_view.projects.dialog = Some(crate::home_projects::Dialog::Rename { id: l.social.clone(), name: "apresentações".into() });
     let s = settle(&mut l.u);
     assert!(has_text(&s, "Another folder here has this name."));
@@ -199,11 +199,11 @@ fn renaming_a_folder_refuses_a_name_beside_it() {
 fn deleting_a_folder_asks_and_keeps_its_files() {
     let mut l = lib("delete");
     let s = sidebar(&mut l.u, "All folders");
-    click_with(&mut l.u, text_center(&s, "MGO CONSTRUTORA"), PointerButton::Secondary);
+    click_with(&mut l.u, text_center(&s, "NORTHWIND BUILDERS"), PointerButton::Secondary);
     let s = shapes(&mut l.u);
     click(&mut l.u, text_center(&s, "Delete folder…"));
     let s = settle(&mut l.u);
-    for line in ["Delete the folder MGO CONSTRUTORA?", "The 1 folder inside it is deleted too.", "No file is deleted from your disk."] {
+    for line in ["Delete the folder NORTHWIND BUILDERS?", "The 1 folder inside it is deleted too.", "No file is deleted from your disk."] {
         assert!(has_text(&s, line), "{line}: {:?}", texts(&s).iter().map(|t| &t.0).collect::<Vec<_>>());
     }
     click(&mut l.u, last_center(&s, "Delete folder"));
@@ -211,7 +211,7 @@ fn deleting_a_folder_asks_and_keeps_its_files() {
     assert!(p.folders.is_empty());
     assert_eq!(p.files.len(), 3, "every file is still in the library");
     assert!(p.files.iter().all(|f| f.folder.is_none()));
-    assert!(std::path::Path::new(&l.marca).exists(), "and on disk");
+    assert!(std::path::Path::new(&l.brand).exists(), "and on disk");
     assert!(p.favorites.is_empty());
 }
 
@@ -228,7 +228,7 @@ fn the_file_menu_adds_to_favorites_and_moves_to_a_folder() {
     assert!(l.u.app.session.projects.is_favorite(&Favorite::File(l.post.clone())));
     let s = settle(&mut l.u);
     assert!(texts(&s).iter().any(|(t, p, _)| t == "post" && p.x < 240.0), "in the sidebar");
-    // Move to folder ▸ MGO CONSTRUTORA.
+    // Move to folder ▸ NORTHWIND BUILDERS.
     click_with(&mut l.u, last_center(&s, "post"), PointerButton::Secondary);
     let s = shapes(&mut l.u);
     let row = text_center(&s, "Move to folder");
@@ -236,8 +236,8 @@ fn the_file_menu_adds_to_favorites_and_moves_to_a_folder() {
         l.u.frame(vec![Event::PointerMoved(row)]);
     }
     let s = shapes(&mut l.u);
-    click(&mut l.u, text_center(&s, "    MGO CONSTRUTORA"));
-    assert_eq!(l.u.app.session.projects.file(&l.post).unwrap().folder.as_deref(), Some(l.mgo.as_str()));
+    click(&mut l.u, text_center(&s, "    NORTHWIND BUILDERS"));
+    assert_eq!(l.u.app.session.projects.file(&l.post).unwrap().folder.as_deref(), Some(l.northwind.as_str()));
     // And out again.
     let s = settle(&mut l.u);
     click_with(&mut l.u, last_center(&s, "post"), PointerButton::Secondary);
@@ -250,24 +250,24 @@ fn the_file_menu_adds_to_favorites_and_moves_to_a_folder() {
 #[test]
 fn a_file_dragged_onto_a_folder_goes_in_it() {
     let mut l = lib("drag");
-    crate::home_projects::open_folder(&mut l.u.app, &l.mgo.clone());
+    crate::home_projects::open_folder(&mut l.u.app, &l.northwind.clone());
     let s = settle(&mut l.u);
-    let (from, to) = (text_center(&s, "marca"), text_center(&s, "Social Media"));
+    let (from, to) = (text_center(&s, "brand"), text_center(&s, "Social Media"));
     l.u.drag_to(from, to);
     l.u.button(to, false);
     settle(&mut l.u);
-    assert_eq!(l.u.app.session.projects.file(&l.marca).unwrap().folder.as_deref(), Some(l.social.as_str()));
+    assert_eq!(l.u.app.session.projects.file(&l.brand).unwrap().folder.as_deref(), Some(l.social.as_str()));
 }
 
 #[test]
 fn grid_and_list_keep_the_folder_and_the_filters() {
     let mut l = lib("views");
-    crate::home_projects::open_folder(&mut l.u.app, &l.mgo.clone());
+    crate::home_projects::open_folder(&mut l.u.app, &l.northwind.clone());
     l.u.app.ui.home_view.projects.kind = KindFilter::Design;
-    l.u.app.ui.home_view.projects.filter = "mar".into();
+    l.u.app.ui.home_view.projects.filter = "bra".into();
     let s = settle(&mut l.u);
     assert_eq!(projects(&l.u)["view"], "grid");
-    assert!(has_text(&s, "marca") && !has_text(&s, "sumiu"), "filtered");
+    assert!(has_text(&s, "brand") && !has_text(&s, "missing"), "filtered");
     // The list button, at the right end of the toolbar row.
     let y = text_center(&s, "1 file").y;
     click(&mut l.u, Pos2::new(1400.0 - 14.0, y));
@@ -275,12 +275,12 @@ fn grid_and_list_keep_the_folder_and_the_filters() {
     let v = projects(&l.u);
     assert_eq!(
         (v["view"].as_str(), v["folder"].as_str(), v["kind"].as_str(), v["filter"].as_str()),
-        (Some("list"), Some(l.mgo.as_str()), Some("design"), Some("mar"))
+        (Some("list"), Some(l.northwind.as_str()), Some("design"), Some("bra"))
     );
     for header in ["Name", "Type", "Folder", "Last modified"] {
         assert!(has_text(&s, header), "{header}");
     }
-    assert!(has_text(&s, "marca") && !has_text(&s, "sumiu"));
+    assert!(has_text(&s, "brand") && !has_text(&s, "missing"));
     assert_eq!(l.u.app.session.prefs.home_views.get("projects").map(String::as_str), Some("list"), "kept in the preferences");
     assert_eq!(l.u.app.session.prefs.home_views.get("recents"), None, "the recent files keep their own");
     // Nothing matching: said so, with a way back.
@@ -302,17 +302,17 @@ fn the_search_finds_folders_and_library_files() {
     assert_eq!(projects(&l.u)["folder"], l.social.as_str());
     assert!(l.u.app.ui.home_view.file_query.is_empty());
     // A file found by its folder's name.
-    l.u.app.ui.home_view.file_query = "mgo".into();
+    l.u.app.ui.home_view.file_query = "northwind".into();
     let s = settle(&mut l.u);
-    assert!(has_text(&s, "Projects") && has_text(&s, "marca"));
+    assert!(has_text(&s, "Projects") && has_text(&s, "brand"));
 }
 
 #[test]
 fn a_missing_file_offers_to_be_located_and_is_never_dropped() {
     let mut l = lib("missing");
-    crate::home_projects::open_folder(&mut l.u.app, &l.mgo.clone());
+    crate::home_projects::open_folder(&mut l.u.app, &l.northwind.clone());
     let s = settle(&mut l.u);
-    click_with(&mut l.u, text_center(&s, "sumiu"), PointerButton::Secondary);
+    click_with(&mut l.u, text_center(&s, "missing"), PointerButton::Secondary);
     let s = shapes(&mut l.u);
     assert!(has_text(&s, "Locate file…"));
     for _ in 0..30 {
@@ -325,7 +325,7 @@ fn a_missing_file_offers_to_be_located_and_is_never_dropped() {
 fn a_failed_save_is_said_once_and_tried_again() {
     let mut l = lib("failing");
     l.log.lock().unwrap().fail = true;
-    l.u.app.run("projects.createFolder", serde_json::json!({"name": "N2F CONSTRUCTION"}));
+    l.u.app.run("projects.createFolder", serde_json::json!({"name": "HARBOR CONSTRUCTION"}));
     l.u.frame(vec![]);
     let toast = l.u.app.ui.toast.as_ref().map(|t| t.0.clone()).unwrap_or_default();
     assert!(toast.contains("Couldn't save your folders and favorites") && toast.contains("disk full"), "{toast}");
@@ -339,7 +339,7 @@ fn a_failed_save_is_said_once_and_tried_again() {
     l.u.advance_clock(1000.0);
     l.u.frame(vec![]);
     assert!(!l.u.app.session.projects.unsaved);
-    assert!(l.log.lock().unwrap().saved.last().is_some_and(|p| p.children(None).iter().any(|f| f.name == "N2F CONSTRUCTION")));
+    assert!(l.log.lock().unwrap().saved.last().is_some_and(|p| p.children(None).iter().any(|f| f.name == "HARBOR CONSTRUCTION")));
     assert!(l.u.app.ui.toast.as_ref().is_some_and(|t| t.0 == "Your folders and favorites are saved again"));
 }
 
@@ -350,9 +350,9 @@ fn favorites_show_folders_and_files_and_go_away_without_deleting() {
     // The Favorites page.
     l.u.app.ui.home_view.section = crate::home::Section::Favorites;
     let s = settle(&mut l.u);
-    assert!(has_text(&s, "MGO CONSTRUTORA") && has_text(&s, "post"));
-    l.u.app.run("projects.favorite", serde_json::json!({"folder": l.mgo.clone(), "on": false}));
+    assert!(has_text(&s, "NORTHWIND BUILDERS") && has_text(&s, "post"));
+    l.u.app.run("projects.favorite", serde_json::json!({"folder": l.northwind.clone(), "on": false}));
     let s = settle(&mut l.u);
-    assert!(!texts(&s).iter().any(|(t, p, _)| t == "MGO CONSTRUTORA" && p.x >= 240.0), "off the page");
-    assert!(l.u.app.session.projects.folder(&l.mgo).is_some(), "the folder stays");
+    assert!(!texts(&s).iter().any(|(t, p, _)| t == "NORTHWIND BUILDERS" && p.x >= 240.0), "off the page");
+    assert!(l.u.app.session.projects.folder(&l.northwind).is_some(), "the folder stays");
 }

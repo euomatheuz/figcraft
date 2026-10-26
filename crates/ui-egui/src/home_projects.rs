@@ -716,7 +716,7 @@ fn header(app: &mut FigApp, ui: &mut Ui, t: &Tokens, page: &Page) -> Option<Fold
     let mut action = None;
     let lib = &app.session.projects;
     if let Page::Folder(id) = page {
-        // All folders › MGO › Social: each step goes back there.
+        // All folders › Northwind › Social: each step goes back there.
         ui.horizontal(|ui| {
             ui.spacing_mut().item_spacing = vec2(4.0, 0.0);
             if link(ui, t, tr("All folders"), "home_crumb_root") {
